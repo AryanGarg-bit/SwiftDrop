@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SwiftDrop</title>
+  <meta name="theme-color" content="#0b1224">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card upload-card" role="region" aria-labelledby="app-title">
+      <header class="card-header">
+        <div class="logo-badge" aria-hidden="true">
+          <img src="assets/logo.png" alt="SwiftDrop logo">
+        </div>
+        <h1 id="app-title">SwiftDrop</h1>
+        <p class="subtitle">Effortlessly send secure transfers with links and QR sharing.</p>
+      </header>
+
+      <div class="drop-wrapper">
+        <div id="drop-area" class="drop-area" role="button" aria-label="Upload files">
+          <div class="drop-visual">
+            <div class="drop-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" focusable="false" aria-hidden="true">
+                <path d="M16 6h10.8c1 0 2 .4 2.7 1.1l9.4 9.1c.7.7 1.1 1.7 1.1 2.7V38c0 2.2-1.8 4-4 4H16c-2.2 0-4-1.8-4-4V10c0-2.2 1.8-4 4-4Z" fill="url(#cardGradient)" stroke="rgba(120, 188, 255, 0.55)" stroke-width="1.6"/>
+                <path d="M15 24h7v-7l11 11-11 11v-7h-7c-2.2 0-4-1.8-4-4s1.8-4 4-4Z" fill="#4cc1ff" fill-opacity="0.85"/>
+                <defs>
+                  <linearGradient id="cardGradient" x1="16" y1="6" x2="38" y2="42" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="rgba(34,197,94,0.45)"/>
+                    <stop offset="1" stop-color="rgba(56,189,248,0.35)"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <h2>Drag &amp; Drop your files</h2>
+            <p class="drop-hint">Drop files here or browse to upload multiple items at once.</p>
+          </div>
+          <div class="drop-actions">
+            <button type="button" class="browse-button" onclick="document.getElementById('file').click();">Browse Files</button>
+            <p class="drop-subhint">Secure uploads with instant encryption &amp; smart delivery.</p>
+          </div>
+          <input type="file" id="file" multiple aria-label="Select files to upload">
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Add a password to protect your transfer">
+      </div>
+
+      <button type="button" class="primary-button" onclick="upload()">Upload Files</button>
+
+      <div class="progress-group">
+        <div id="progress-container" class="progress" style="display:none;">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <p id="progress-text" class="progress-text" aria-live="polite"></p>
+      </div>
+
+      <section class="result" aria-live="polite">
+        <div class="result-header">
+          <h2 class="result-title">Share Link</h2>
+          <p>Receive a premium download link and QR code once your upload completes.</p>
+        </div>
+        <div id="result" class="result-content"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <p class="footer-text">
+      Need help?
+      <a class="footer-link" href="aryangarg0526@gmail.com">aryangarg0526@gmail.com</a>
+    </p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

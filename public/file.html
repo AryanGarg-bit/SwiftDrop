@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Download File • SwiftDrop</title>
+	<meta name="theme-color" content="#0b1224">
+	<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+	<link rel="icon" type="image/png" href="favicon.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
+	<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+		<main class="page">
+			<section class="card download-card" role="region" aria-labelledby="download-title">
+				<header class="card-header download-header">
+					<div class="file-icon" aria-hidden="true">
+						<svg viewBox="0 0 48 48" focusable="false" aria-hidden="true">
+							<path d="M16 6h10.8c1 0 2 .4 2.7 1.1l9.4 9.1c.7.7 1.1 1.7 1.1 2.7V38c0 2.2-1.8 4-4 4H16c-2.2 0-4-1.8-4-4V10c0-2.2 1.8-4 4-4Z" fill="url(#downloadCardGradient)" stroke="rgba(120, 188, 255, 0.55)" stroke-width="1.6"/>
+							<path d="M24 15v14" stroke="#4cc1ff" stroke-width="2.2" stroke-linecap="round"/>
+							<path d="M18 24l6 6 6-6" fill="none" stroke="#4cc1ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+							<defs>
+								<linearGradient id="downloadCardGradient" x1="16" y1="6" x2="38" y2="42" gradientUnits="userSpaceOnUse">
+									<stop stop-color="rgba(74,222,128,0.45)"/>
+									<stop offset="1" stop-color="rgba(59,130,246,0.35)"/>
+								</linearGradient>
+							</defs>
+						</svg>
+					</div>
+					<p class="eyebrow">Secure File Download</p>
+					<h1 id="download-title">Retrieve your transfer</h1>
+					<p class="subtitle">Confirm the details below and unlock the download with your password.</p>
+				</header>
+
+				<article class="file-info" id="file-info" aria-live="polite">Loading file info...</article>
+
+				<div class="form-control">
+					<label for="password">Password</label>
+					<input type="password" id="password" placeholder="Enter password to continue">
+				</div>
+
+				<button type="button" class="primary-button download-button" onclick="verify()">Download Securely</button>
+
+				<p id="msg" class="status-text" aria-live="polite"></p>
+
+				<div class="support-inline">
+					Need help?
+					<a class="footer-link" href="mailto:aryangarg0526@gmail.com">aryangarg0526@gmail.com</a>
+				</div>
+			</section>
+		</main>
+
+		<footer class="footer" role="contentinfo">
+			<p class="footer-text">
+				Need help?
+				<a class="footer-link" href="mailto:aryangarg0526@gmail.com">aryangarg0526@gmail.com</a>
+			</p>
+		</footer>
+
+		<script>
+		let currentFileName = "";
+
+		// LOAD FILE INFO
+		async function loadFileInfo() {
+			const infoEl = document.getElementById("file-info");
+			const params = new URLSearchParams(window.location.search);
+			const id = params.get("id");
+
+			infoEl.innerText = "Loading file info...";
+
+			if (!id) {
+				infoEl.innerText = "File not found";
+				return;
+			}
+
+			try {
+				const res = await fetch("/fileinfo/" + id, { cache: "no-store" });
+
+				if (!res.ok) {
+					throw new Error("Unable to load file info");
+				}
+
+				const data = await res.json();
+
+				if (data.filename) {
+					currentFileName = data.filename;
+					infoEl.innerHTML = `
+File: ${data.filename} <br>
+Size: ${data.size} <br>
+Downloads: ${data.downloads}
+`;
+				} else {
+					infoEl.innerText = "File not found";
+				}
+			} catch (error) {
+				infoEl.innerText = "Unable to load file info.";
+			}
+		}
+
+		// VERIFY PASSWORD
+		async function verify() {
+			const params = new URLSearchParams(window.location.search);
+			const id = params.get("id");
+			const password = document.getElementById("password").value;
+
+			document.getElementById("msg").innerText = "";
+
+			if (!id) {
+				document.getElementById("msg").innerText = "File not found";
+				return;
+			}
+
+			try {
+				const res = await fetch("/verify", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						id,
+						password
+					})
+				});
+
+				if (!res.ok) {
+					const errorData = await res.json().catch(() => ({ error: "Unable to verify password." }));
+					document.getElementById("msg").innerText = errorData.error || "Unable to verify password.";
+					return;
+				}
+
+				const data = await res.json();
+
+				if (data.download) {
+					try {
+						const downloadResponse = await fetch(data.download);
+
+						if (!downloadResponse.ok) {
+							throw new Error("Download failed");
+						}
+
+						const blob = await downloadResponse.blob();
+						const downloadUrl = URL.createObjectURL(blob);
+						const link = document.createElement("a");
+						link.href = downloadUrl;
+						link.download = data.filename || currentFileName || "download";
+						document.body.appendChild(link);
+						link.click();
+						link.remove();
+						URL.revokeObjectURL(downloadUrl);
+						document.getElementById("msg").innerText = "Download started.";
+						currentFileName = data.filename || currentFileName;
+						await loadFileInfo();
+					} catch (error) {
+						document.getElementById("msg").innerText = "Unable to download file.";
+					}
+				} else {
+					document.getElementById("msg").innerText = data.error;
+				}
+			} catch (error) {
+				document.getElementById("msg").innerText = "Unable to verify password.";
+			}
+		}
+
+		// RUN ON PAGE LOAD
+		loadFileInfo();
+	</script>
+
+	</body>
+	</html>
