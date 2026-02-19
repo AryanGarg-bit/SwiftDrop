@@ -8,6 +8,7 @@ const progressText = document.getElementById("progress-text");
 const resultContainer = document.getElementById("result");
 
 let uploadTotalBytes = 0;
+const apiBase = window.location.origin;
 
 function resetProgress() {
 	if (progressBar) {
@@ -61,7 +62,7 @@ async function upload() {
 	formData.append("password", password);
 
 	const xhr = new XMLHttpRequest();
-	xhr.open("POST", "http://localhost:3000/upload");
+	xhr.open("POST", `${apiBase}/upload`);
 
 	if (progressContainer) {
 		progressContainer.style.display = "block";
@@ -125,7 +126,7 @@ async function upload() {
 			}
 
 			try {
-				const qrRes = await fetch(`http://localhost:3000/qrcode/${encodeURIComponent(id)}`);
+				const qrRes = await fetch(`${apiBase}/qrcode/${encodeURIComponent(id)}`);
 				if (!qrRes.ok) {
 					throw new Error(`QR request failed: ${qrRes.status}`);
 				}

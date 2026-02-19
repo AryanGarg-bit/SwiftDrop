@@ -7,12 +7,17 @@ const fs = require("fs");
 const archiver = require("archiver");
 const { createClient } = require("@supabase/supabase-js");
 
-const SUPABASE_URL = "https://bxxebiztzyepjptkdpvz.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4eGViaXp0enllcGpwdGtkcHZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTY0ODAsImV4cCI6MjA4NjczMjQ4MH0.L4lGXZjUpxiqqAjZi5yuVjo10Cy-rZVYilv--qDgF0Y";
+const SUPABASE_URL = process.env.SUPABASE_URL || "https://bxxebiztzyepjptkdpvz.supabase.co";
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4eGViaXp0enllcGpwdGtkcHZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNTY0ODAsImV4cCI6MjA4NjczMjQ4MH0.L4lGXZjUpxiqqAjZi5yuVjo10Cy-rZVYilv--qDgF0Y";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const app = express();
+const uploadDir = path.join(process.cwd(), "uploads");
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 app.use(cors());
 app.use(express.json());
@@ -22,7 +27,8 @@ const QRCode = require("qrcode");
 
 app.get("/qrcode/:id", async (req, res) => {
   const { id } = req.params;
-  const link = `http://localhost:3000/file.html?id=${id}`;
+  const baseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
+  const link = `${baseUrl}/file.html?id=${id}`;
 
   try {
     const qr = await QRCode.toDataURL(link);
@@ -36,7 +42,7 @@ app.get("/qrcode/:id", async (req, res) => {
 
 // MULTER STORAGE CONFIG
 const storage = multer.diskStorage({
-  destination: "uploads/",
+  destination: uploadDir,
   filename: (req, file, cb) => {
     cb(null, uuidv4() + "-" + file.originalname);
   }
@@ -83,7 +89,7 @@ app.post("/upload", (req, res) => {
       }
 
       res.json({
-        link: `http://localhost:3000/file.html?id=${id}`
+        link: `${process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`}/file.html?id=${id}`
       });
     } catch (err) {
       console.error("Upload handler error", err);
@@ -166,7 +172,7 @@ app.get("/download/:id", async (req, res) => {
       .map((name) => ({
         stored: name,
         original: name.replace(/^[^-]+-/, ""),
-        absolutePath: path.join(__dirname, "uploads", name)
+        absolutePath: path.join(uploadDir, name)
       }))
       .filter((fileInfo) => fs.existsSync(fileInfo.absolutePath));
 
@@ -263,7 +269,7 @@ app.get("/fileinfo/:id", async (req, res) => {
       .map((name) => ({
         stored: name,
         original: name.replace(/^[^-]+-/, ""),
-        absolutePath: path.join(__dirname, "uploads", name)
+        absolutePath: path.join(uploadDir, name)
       }))
       .filter((fileInfo) => fs.existsSync(fileInfo.absolutePath));
 
@@ -293,10 +299,16 @@ app.get("/fileinfo/:id", async (req, res) => {
 
 
 // STATIC FILES
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(uploadDir));
 
 
 // START SERVER
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
-});
+if (!process.env.VERCEL) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+}
+
+module.exports = app;
+
